@@ -1,12 +1,12 @@
 const supabase = require("../config/supabase");
 
-// Get all users
+// Get all users (Auth Admin API)
 const getAllAuthUsers = async (req, res) => {
   try {
-    const { data, error } = await supabase.from("auth.users").select("*");
+    const { data, error } = await supabase.auth.admin.listUsers();
     if (error) throw error;
 
-    res.json(data);
+    res.json(data.users);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -23,7 +23,29 @@ const createUser = async (req, res) => {
   }
 };
 
+// Create a new auth user (Admin API)
+const createAuthUser = async (req, res) => {
+  try {
+    const { email, password, email_confirm } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: Boolean(email_confirm),
+    });
+    if (error) throw error;
+
+    res.status(201).json(data.user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllAuthUsers,
   createUser,
+  createAuthUser,
 };
