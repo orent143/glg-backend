@@ -1,3 +1,4 @@
+require("dotenv").config(); // Add this line at the top
 const express = require("express");
 const supabase = require("./config/supabase");
 const userRoutes = require("./routes/userRoutes");
