@@ -1,13 +1,20 @@
 require("dotenv").config(); // Add this line at the top
 const express = require("express");
+const cors = require("cors");
 const rateLimit = require("express-rate-limit");
-const supabase = require("./config/supabase");
 const userRoutes = require("./routes/userRoutes");
+const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(
+  cors({
+    origin: "http://localhost:3001",
+  })
+);
+app.options(/.*/, cors());
 app.use(express.json());
 
 const apiLimiter = rateLimit({
@@ -26,6 +33,9 @@ app.get("/", (req, res) => {
 
 // Routes
 app.use("/users", userRoutes);
+
+// Error handler (keep last)
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
