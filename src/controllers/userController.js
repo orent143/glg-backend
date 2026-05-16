@@ -48,12 +48,17 @@ const createAuthUser = async (req, res) => {
 // Customer Signup API
 const customerRegister = async (req, res) => {
   try {
-    const { email, password, fullName } = req.body;
+    const { email, password, full_name, fullName } = req.body;
+    const resolvedFullName = full_name ?? fullName;
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    await userService.signUpCustomer({ email, password, fullName });
+    await userService.signUpCustomer({
+      email,
+      password,
+      full_name: resolvedFullName,
+    });
     return res
       .status(201)
       .json({ message: "Signup created. Check your email to verify." });

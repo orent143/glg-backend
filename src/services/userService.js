@@ -15,18 +15,29 @@ const addUser = async (user) => {
 };
 
 // Public customer signup (Supabase handles email verification)
-const signUpCustomer = async ({ email, password, fullName }) => {
+const signUpCustomer = async ({ email, password, full_name }) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
-        fullname: fullName,
+        full_name: full_name,
       },
       emailRedirectTo: process.env.SUPABASE_EMAIL_REDIRECT_URL || undefined,
     },
   });
   if (error) throw error;
+
+  if (data && data.user && full_name) {
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      data.user.id,
+      {
+        user_metadata: { full_name },
+      }
+    );
+    if (updateError) throw updateError;
+  }
+
   return data.user;
 };
 
