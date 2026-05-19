@@ -1,5 +1,16 @@
 const supabase = require("../config/supabase");
 
+const fetchProfileById = async (userId) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, role, email, full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization || "";
@@ -16,7 +27,19 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ error: "Invalid or expired token" });
     }
 
+    const profile = await fetchProfileById(data.user.id);
+    if (!profile || !profile.role) {
+      return res.status(403).json({ error: "Profile role not found" });
+    }
+
     req.auth = { user: data.user };
+    req.user = {
+      id: profile.id,
+      role: profile.role,
+      email: profile.email || data.user.email || null,
+      full_name: profile.full_name || null,
+    };
+
     return next();
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -25,8 +48,7 @@ const authenticate = async (req, res, next) => {
 
 const requireRole = (roles = []) => {
   return (req, res, next) => {
-    const user = req.auth && req.auth.user;
-    const role = user && user.app_metadata && user.app_metadata.role;
+    const role = req.user && req.user.role;
 
     if (!role || (roles.length > 0 && !roles.includes(role))) {
       return res.status(403).json({ error: "Forbidden" });

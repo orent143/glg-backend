@@ -1,15 +1,20 @@
 const supabase = require("../config/supabase");
 
-// Fetch all users
-const fetchAllUsers = async () => {
-  const { data, error } = await supabase.from("users").select("*");
-  if (error) throw error;
-  return data;
-};
+const upsertProfile = async ({ id, email, full_name, role }) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id,
+        email: email || null,
+        full_name: full_name || null,
+        role,
+      },
+      { onConflict: "id" }
+    )
+    .select("id, role, email, full_name")
+    .single();
 
-// Add a new user
-const addUser = async (user) => {
-  const { data, error } = await supabase.from("users").insert([user]);
   if (error) throw error;
   return data;
 };
@@ -38,6 +43,15 @@ const signUpCustomer = async ({ email, password, full_name }) => {
     if (updateError) throw updateError;
   }
 
+  if (data && data.user) {
+    await upsertProfile({
+      id: data.user.id,
+      email: data.user.email,
+      full_name: full_name || null,
+      role: "customer",
+    });
+  }
+
   return data.user;
 };
 
@@ -49,22 +63,45 @@ const inviteAuthUser = async ({ email, role }) => {
   if (error) throw error;
 
   if (data && data.user && role) {
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      data.user.id,
-      {
-        app_metadata: { role },
-      }
-    );
-    if (updateError) throw updateError;
+    await upsertProfile({
+      id: data.user.id,
+      email: data.user.email,
+      full_name: data.user.user_metadata && data.user.user_metadata.full_name,
+      role,
+    });
   }
 
   return data.user;
 };
 
+// Login with email/password and return access token
+const loginUser = async ({ email, password }) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) throw error;
+
+  const userId = data && data.user && data.user.id;
+  const accessToken = data && data.session && data.session.access_token;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+
+  if (!userId || !accessToken || !profile || !profile.role) {
+    throw new Error("Authenticated user not found");
+  }
+
+  return { userId, accessToken, role: profile.role };
+};
+
 
 module.exports = {
-  fetchAllUsers,
-  addUser,
   signUpCustomer,
   inviteAuthUser,
+  loginUser,
 };

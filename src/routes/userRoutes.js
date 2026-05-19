@@ -13,28 +13,14 @@ const signupLimiter = rateLimit({
 	message: { error: "Too many signups. Please try again shortly." },
 });
 
-// Define user routes
-router.get(
-	"/auth-users",
-	authenticate,
-	requireRole(["admin"]),
-	userController.getAllAuthUsers
-);
-router.post(
-	"/auth-users",
-	authenticate,
-	requireRole(["admin"]),
-	userController.createAuthUser
-);
-
-// Auth helpers
+// Auth helpers (RBAC focused)
 router.post("/auth/signup", signupLimiter, userController.customerRegister);
+router.post("/auth/login", userController.loginUser);
 router.post(
 	"/auth/invite",
 	authenticate,
 	requireRole(["admin"]),
 	userController.inviteAdminUser
 );
-router.post("/", userController.createUser);
 
 module.exports = router;

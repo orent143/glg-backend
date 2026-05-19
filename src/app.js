@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const userRoutes = require("./routes/userRoutes");
+const { auditLogger } = require("./middlewares/auditLogger");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(
 );
 app.options(/.*/, cors());
 app.use(express.json());
+app.use(auditLogger);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
