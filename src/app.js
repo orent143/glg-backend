@@ -13,25 +13,28 @@ app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3001")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+const allowedOrigins = [
+  "https://glgtech.qzz.io",
+  "https://glgpharma.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:3001",
+];
 
-      return callback(new Error("Not allowed by CORS"));
-    },
-  })
-);
-app.options(/.*/, cors());
-app.use(express.json());
-app.use(auditLogger);
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
