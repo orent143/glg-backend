@@ -16,11 +16,7 @@ const signupLimiter = rateLimit({
 // Auth helpers (RBAC focused)
 router.post("/auth/signup", signupLimiter, userController.customerRegister);
 router.post("/auth/login", userController.loginUser);
-router.post(
-	"/auth/invite",
-	authenticate,
-	requireRole(["admin"]),
-	userController.inviteAdminUser
-);
+router.get("/auth/staff", userController.getStaffUsers);
+router.post("/auth/invite",authenticate, requireRole(["admin"]),userController.inviteAdminUser);
 
 module.exports = router;

@@ -74,6 +74,23 @@ const inviteAuthUser = async ({ email, role }) => {
   return data.user;
 };
 
+//Admin fetch Staff profiles
+const getStaffUsers = async () => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, role, phone, full_name")
+    .in("role", ["admin", "pharmacist"]);
+
+  if (error) {
+    console.log(error);
+    throw new Error(error.message);
+  }
+
+  console.log(data);
+
+  return data;
+};
+
 // Login with email/password and return access token
 const loginUser = async ({ email, password }) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -103,5 +120,6 @@ const loginUser = async ({ email, password }) => {
 module.exports = {
   signUpCustomer,
   inviteAuthUser,
+  getStaffUsers,
   loginUser,
 };

@@ -49,6 +49,23 @@ const inviteAdminUser = async (req, res) => {
   }
 };
 
+//Admin get staff users
+const getStaffUsers = async (req, res) => {
+  try {
+    const users = await userService.getStaffUsers();
+
+    console.log("Fetched users:", users);
+
+    return res.status(200).json(users);
+  } catch (err) {
+    console.log(err);
+
+    return res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
 // Login API (returns access token)
 const loginUser = async (req, res) => {
   try {
@@ -67,5 +84,6 @@ const loginUser = async (req, res) => {
 module.exports = {
   customerRegister,
   inviteAdminUser,
+  getStaffUsers,
   loginUser,
 };
