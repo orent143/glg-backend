@@ -9,7 +9,8 @@ const errorHandler = require("./middlewares/errorHandler");
 const app = express();
 
 app.set("trust proxy", 1);
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 3000;
 
 // Middleware
